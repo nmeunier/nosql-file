@@ -6,7 +6,7 @@ on:
       - "v*"
 
 permissions:
-  contents: write
+  contents: read
   id-token: write
 
 jobs:
@@ -37,7 +37,7 @@ jobs:
         run: npm run build
 
       - name: Publish to npm
-        run: npm publish --provenance
+        run: npm publish
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
