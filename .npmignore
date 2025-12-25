@@ -1,0 +1,19 @@
+# Source files
+src/
+tests/
+docs/
+
+# Configuration
+tsconfig.json
+jest.config.js
+eslint.config.mjs
+
+# Development
+.vscode/
+.git/
+.gitignore
+node_modules/
+coverage/
+data/
+
+# Keep only dist and docs in package

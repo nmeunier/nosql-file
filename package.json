@@ -1,0 +1,61 @@
+{
+  "name": "nosql-file",
+  "version": "1.0.0",
+  "description": "File-based data storage with YAML/JSON serialization for configurations and small datasets",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "prepublishOnly": "npm run lint && npm test && npm run build"
+  },
+  "keywords": [
+    "nosql",
+    "database",
+    "yaml",
+    "json",
+    "file",
+    "persistence",
+    "config",
+    "storage",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nmeunier/nosql-file.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nmeunier/nosql-file/issues"
+  },
+  "homepage": "https://github.com/nmeunier/nosql-file#readme",
+  "files": [
+    "dist/src",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "commonjs",
+  "dependencies": {
+    "yaml": "^2.8.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@jest/globals": "^30.2.0",
+    "@types/eslint__js": "^8.42.3",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.0.3",
+    "eslint": "^9.39.2",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.50.0"
+  }
+}
