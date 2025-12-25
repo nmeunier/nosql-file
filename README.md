@@ -1,6 +1,13 @@
 # nosql-file
 
-A flexible, file-based NoSQL database library for Node.js with support for YAML and JSON formats, featuring concurrent access control, multiple write modes, and both array and key-value storage options.
+[![npm version](https://img.shields.io/npm/v/nosql-file)](https://www.npmjs.com/package/nosql-file)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
+[![Tests](https://github.com/nmeunier/nosql-file/workflows/Tests%20%26%20Build/badge.svg)](https://github.com/nmeunier/nosql-file/actions)
+[![codecov](https://codecov.io/gh/nmeunier/nosql-file/branch/main/graph/badge.svg?token=YOUR_CODECOV_TOKEN)](https://codecov.io/gh/nmeunier/nosql-file)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14-brightgreen.svg)](https://nodejs.org/)
+
+A flexible, file-based data storage library for Node.js with support for YAML and JSON formats, featuring concurrent access control, multiple write modes, and both array and key-value storage options.
 
 ## Features
 
@@ -396,30 +403,6 @@ MIT
 
 Contributions are welcome. Please ensure tests pass and coverage remains above 95%.
 
-## Publishing
-
-This package is published on npm. To publish a new version:
-
-1. Update version in `package.json` (use semantic versioning)
-2. Run tests and build:
-   ```bash
-   npm test
-   npm run build
-   ```
-3. Commit your changes and create a git tag:
-   ```bash
-   git add .
-   git commit -m "Release v1.0.0"
-   git tag v1.0.0
-   git push && git push --tags
-   ```
-4. Publish to npm:
-   ```bash
-   npm publish
-   ```
-
-The `prepublishOnly` script will automatically lint, test, and build before publishing.
-
 ## Changelog
 
 ### Version 1.0.0
@@ -431,3 +414,4 @@ The `prepublishOnly` script will automatically lint, test, and build before publ
 - Multiple write modes (async, fast, memory)
 - Comprehensive test suite (181 tests)
 - Full TypeScript support
+- GitHub Actions CI/CD pipelines
