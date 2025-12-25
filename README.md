@@ -5,7 +5,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
 [![Tests](https://github.com/nmeunier/nosql-file/workflows/Tests%20%26%20Build/badge.svg)](https://github.com/nmeunier/nosql-file/actions)
 [![codecov](https://codecov.io/gh/nmeunier/nosql-file/branch/main/graph/badge.svg?token=YOUR_CODECOV_TOKEN)](https://codecov.io/gh/nmeunier/nosql-file)
-[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14-brightgreen.svg)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
 
 A flexible, file-based data storage library for Node.js with support for YAML and JSON formats, featuring concurrent access control, multiple write modes, and both array and key-value storage options.
 
