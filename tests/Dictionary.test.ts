@@ -1,11 +1,11 @@
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
-import { Database } from '../src/core/Database';
+import { NoSqlFile } from '../src/core/Database';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
 describe('Dictionary - Basic Operations (Simple Mode)', () => {
   const testDataPath = path.join(__dirname, '../data/test');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     // Clean test directory
@@ -13,7 +13,7 @@ describe('Dictionary - Basic Operations (Simple Mode)', () => {
     await fs.mkdir(testDataPath, { recursive: true });
 
     // Create database instance
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
@@ -118,7 +118,7 @@ describe('Dictionary - Basic Operations (Simple Mode)', () => {
 
 describe('Dictionary - JSON Format', () => {
   const testDataPath = path.join(__dirname, '../data/test');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     // Clean test directory
@@ -126,7 +126,7 @@ describe('Dictionary - JSON Format', () => {
     await fs.mkdir(testDataPath, { recursive: true });
 
     // Create database instance with JSON format
-    db = new Database(testDataPath, { format: 'json' });
+    db = new NoSqlFile(testDataPath, { format: 'json' });
   });
 
   afterEach(async () => {
@@ -180,7 +180,7 @@ describe('Dictionary - JSON Format', () => {
 
 describe('Dictionary - Initial Load', () => {
   const testDataPath = path.join(__dirname, '../data/test');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     // Clean test directory
@@ -197,7 +197,7 @@ describe('Dictionary - Initial Load', () => {
     const filePath = path.join(testDataPath, 'config.yaml');
     await fs.writeFile(filePath, 'theme: dark\nlanguage: en\n');
 
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
     const config = await db.dictionary('config');
 
     expect(config.get('theme')).toBe('dark');
@@ -208,7 +208,7 @@ describe('Dictionary - Initial Load', () => {
     const filePath = path.join(testDataPath, 'config.json');
     await fs.writeFile(filePath, JSON.stringify({ theme: 'dark', language: 'en' }));
 
-    db = new Database(testDataPath, { format: 'json' });
+    db = new NoSqlFile(testDataPath, { format: 'json' });
     const config = await db.dictionary('config');
 
     expect(config.get('theme')).toBe('dark');
@@ -216,7 +216,7 @@ describe('Dictionary - Initial Load', () => {
   });
 
   test('should initialize empty dictionary if file does not exist', async () => {
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
     const config = await db.dictionary('config');
 
     expect(config.keys()).toHaveLength(0);
@@ -226,7 +226,7 @@ describe('Dictionary - Initial Load', () => {
     const filePath = path.join(testDataPath, 'config.yaml');
     await fs.writeFile(filePath, 'theme: dark\n');
 
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
     const config = await db.dictionary('config');
 
     await config.set('language', 'en');
@@ -238,12 +238,12 @@ describe('Dictionary - Initial Load', () => {
 
 describe('Dictionary - EventEmitter', () => {
   const testDataPath = path.join(__dirname, '../data/test');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
@@ -279,7 +279,7 @@ describe('Dictionary - EventEmitter', () => {
   });
 
   test('should emit "error" event on write failure', async () => {
-    const invalidDb = new Database('/invalid/nonexistent/path');
+    const invalidDb = new NoSqlFile('/invalid/nonexistent/path');
     const invalidDict = await invalidDb.dictionary('config');
 
     let errorEmitted = false;
@@ -329,12 +329,12 @@ describe('Dictionary - EventEmitter', () => {
 
 describe('Dictionary - Utility Methods', () => {
   const testDataPath = path.join(__dirname, '../data/test');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
@@ -439,12 +439,12 @@ describe('Dictionary - Utility Methods', () => {
 
 describe('Dictionary - Fast Mode', () => {
   const testDataPath = path.join(__dirname, '../data/test');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
@@ -525,12 +525,12 @@ describe('Dictionary - Fast Mode', () => {
 
 describe('Dictionary - Memory-Only Mode', () => {
   const testDataPath = path.join(__dirname, '../data/test');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {

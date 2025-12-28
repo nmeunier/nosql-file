@@ -1,9 +1,9 @@
 {
   "name": "nosql-file",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "File-based data storage with YAML/JSON serialization for configurations and small datasets",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "directories": {
     "doc": "docs"
   },
@@ -27,7 +27,7 @@
     "storage",
     "typescript"
   ],
-  "author": "",
+  "author": "Nicolas Meunier",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -42,6 +42,13 @@
     "README.md",
     "LICENSE"
   ],
+  "exports": {
+    ".": {
+      "require": "./dist/src/index.js",
+      "import": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    }
+  },
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"

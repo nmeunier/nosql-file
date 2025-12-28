@@ -1,11 +1,11 @@
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
-import { Database } from '../src/core/Database';
+import { NoSqlFile } from '../src/core/Database';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
 describe('Dictionary - Splited Mode (YAML)', () => {
   const testDataPath = path.join(__dirname, '../data/test');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     // Clean test directory
@@ -13,7 +13,7 @@ describe('Dictionary - Splited Mode (YAML)', () => {
     await fs.mkdir(testDataPath, { recursive: true });
 
     // Create database instance
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
@@ -130,7 +130,7 @@ describe('Dictionary - Splited Mode (YAML)', () => {
     await fs.writeFile(path.join(dirPath, 'theme.yaml'), 'dark\n');
     await fs.writeFile(path.join(dirPath, 'language.yaml'), 'en\n');
 
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
     const cache = await db.dictionary('cache', { splited: true });
 
     expect(cache.get('theme')).toBe('dark');
@@ -222,7 +222,7 @@ describe('Dictionary - Splited Mode (YAML)', () => {
 
 describe('Dictionary - Splited Mode (JSON)', () => {
   const testDataPath = path.join(__dirname, '../data/test');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     // Clean test directory
@@ -230,7 +230,7 @@ describe('Dictionary - Splited Mode (JSON)', () => {
     await fs.mkdir(testDataPath, { recursive: true });
 
     // Create database instance with JSON format
-    db = new Database(testDataPath, { format: 'json' });
+    db = new NoSqlFile(testDataPath, { format: 'json' });
   });
 
   afterEach(async () => {
@@ -284,7 +284,7 @@ describe('Dictionary - Splited Mode (JSON)', () => {
     await fs.writeFile(path.join(dirPath, 'theme.json'), JSON.stringify('dark'));
     await fs.writeFile(path.join(dirPath, 'count.json'), JSON.stringify(42));
 
-    db = new Database(testDataPath, { format: 'json' });
+    db = new NoSqlFile(testDataPath, { format: 'json' });
     const cache = await db.dictionary('cache', { splited: true });
 
     expect(cache.get('theme')).toBe('dark');
@@ -294,14 +294,14 @@ describe('Dictionary - Splited Mode (JSON)', () => {
 
 describe('Dictionary - Mixed Mode (Simple and Splited)', () => {
   const testDataPath = path.join(__dirname, '../data/test');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     // Clean test directory
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
 
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {

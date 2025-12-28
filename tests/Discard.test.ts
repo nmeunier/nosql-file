@@ -1,16 +1,16 @@
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
-import { Database } from '../src/core/Database';
+import { NoSqlFile } from '../src/core/Database';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
 describe('Collection - Discard Operations', () => {
   const testDataPath = path.join(__dirname, '../data/test-discard');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
@@ -76,12 +76,12 @@ describe('Collection - Discard Operations', () => {
 
 describe('Dictionary - Discard Operations', () => {
   const testDataPath = path.join(__dirname, '../data/test-discard');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
@@ -166,14 +166,14 @@ describe('Dictionary - Discard Operations', () => {
   });
 });
 
-describe('Database - Discard All', () => {
+describe('NoSqlFile - Discard All', () => {
   const testDataPath = path.join(__dirname, '../data/test-discard');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {

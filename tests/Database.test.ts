@@ -1,8 +1,8 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { Database } from '../src/core/Database';
+import { NoSqlFile } from '../src/core/Database';
 
-describe('Database', () => {
+describe('NoSqlFile', () => {
   const dataPath = path.join(__dirname, 'test-database');
 
   beforeEach(async () => {
@@ -28,7 +28,7 @@ describe('Database', () => {
 
   describe('syncAll', () => {
     it('should sync all collections', async () => {
-      const db = new Database(dataPath);
+      const db = new NoSqlFile(dataPath);
 
       const users = await db.collection('users');
       const posts = await db.collection('posts');
@@ -57,7 +57,7 @@ describe('Database', () => {
     });
 
     it('should sync all dictionaries', async () => {
-      const db = new Database(dataPath);
+      const db = new NoSqlFile(dataPath);
 
       const settings = await db.dictionary('settings');
       const metadata = await db.dictionary('metadata');
@@ -86,7 +86,7 @@ describe('Database', () => {
     });
 
     it('should sync both collections and dictionaries together', async () => {
-      const db = new Database(dataPath);
+      const db = new NoSqlFile(dataPath);
 
       const users = await db.collection('users');
       const settings = await db.dictionary('settings');
@@ -98,7 +98,7 @@ describe('Database', () => {
       await db.syncAll();
 
       // Load fresh database and verify data
-      const db2 = new Database(dataPath);
+      const db2 = new NoSqlFile(dataPath);
       const users2 = await db2.collection('users');
       const settings2 = await db2.dictionary('settings');
 
@@ -114,7 +114,7 @@ describe('Database', () => {
     });
 
     it('should handle empty database', async () => {
-      const db = new Database(dataPath);
+      const db = new NoSqlFile(dataPath);
 
       // Don't create any collections or dictionaries
       // Should not throw
@@ -124,7 +124,7 @@ describe('Database', () => {
     });
 
     it('should handle sync errors gracefully', async () => {
-      const db = new Database(dataPath);
+      const db = new NoSqlFile(dataPath);
       const users = await db.collection('users');
 
       // Make dataPath read-only to trigger write error
@@ -143,7 +143,7 @@ describe('Database', () => {
     });
 
     it('should sync with fast mode', async () => {
-      const db = new Database(dataPath);
+      const db = new NoSqlFile(dataPath);
       const users = await db.collection('users');
 
       // Use fast mode
@@ -153,7 +153,7 @@ describe('Database', () => {
       await db.syncAll();
 
       // Verify data was written
-      const db2 = new Database(dataPath);
+      const db2 = new NoSqlFile(dataPath);
       const users2 = await db2.collection('users');
       await users2.load();
 
@@ -165,7 +165,7 @@ describe('Database', () => {
 
   describe('close', () => {
     it('should have close method', async () => {
-      const db = new Database(dataPath);
+      const db = new NoSqlFile(dataPath);
       expect(typeof db.close).toBe('function');
 
       // Should not throw
@@ -173,7 +173,7 @@ describe('Database', () => {
     });
 
     it('should complete pending syncs before closing', async () => {
-      const db = new Database(dataPath);
+      const db = new NoSqlFile(dataPath);
       const users = await db.collection('users');
 
       // Insert with fast mode (background sync)
@@ -183,7 +183,7 @@ describe('Database', () => {
       await db.close();
 
       // Verify data was synced
-      const db2 = new Database(dataPath);
+      const db2 = new NoSqlFile(dataPath);
       const users2 = await db2.collection('users');
       await users2.load();
 
@@ -193,7 +193,7 @@ describe('Database', () => {
     });
 
     it('should work with multiple collections and dictionaries', async () => {
-      const db = new Database(dataPath);
+      const db = new NoSqlFile(dataPath);
 
       const users = await db.collection('users');
       const posts = await db.collection('posts');
@@ -207,7 +207,7 @@ describe('Database', () => {
       await db.close();
 
       // Verify all data is accessible after reopening
-      const db2 = new Database(dataPath);
+      const db2 = new NoSqlFile(dataPath);
       const users2 = await db2.collection('users');
       const posts2 = await db2.collection('posts');
       const settings2 = await db2.dictionary('settings');
@@ -224,7 +224,7 @@ describe('Database', () => {
 
   describe('FileLockManager integration', () => {
     it('should provide access to FileLockManager', () => {
-      const db = new Database(dataPath);
+      const db = new NoSqlFile(dataPath);
       const lockManager = db.getFileLockManager();
 
       expect(lockManager).toBeDefined();
@@ -233,7 +233,7 @@ describe('Database', () => {
     });
 
     it('should use FileLockManager for concurrent operations', async () => {
-      const db = new Database(dataPath);
+      const db = new NoSqlFile(dataPath);
       const users = await db.collection('users');
 
       // Perform multiple concurrent operations
@@ -247,7 +247,7 @@ describe('Database', () => {
       // All should be written correctly due to locking
       await db.syncAll();
 
-      const db2 = new Database(dataPath);
+      const db2 = new NoSqlFile(dataPath);
       const users2 = await db2.collection('users');
       await users2.load();
 

@@ -4,14 +4,14 @@ import { DatabaseOptions, DictionaryOptions } from '../types';
 import { FileLockManager } from '../utils/FileLockManager';
 
 /**
- * Database - Main database manager for collections and dictionaries
+ * NoSqlFile - Main database manager for collections and dictionaries
  * 
  * Manages the lifecycle of collections and dictionaries, handles shared
  * file locking, and provides bulk operations like syncAll() and close().
  * 
  * @example
  * ```typescript
- * const db = new Database('./data', { format: 'json' });
+ * const db = new NoSqlFile('./data', { format: 'json' });
  * 
  * const users = await db.collection('users');
  * const config = await db.dictionary('config');
@@ -20,7 +20,7 @@ import { FileLockManager } from '../utils/FileLockManager';
  * await db.close();    // Close and sync
  * ```
  */
-export class Database {
+export class NoSqlFile {
   /** Path where all data is stored */
   private dataPath: string;
 
@@ -37,7 +37,7 @@ export class Database {
   private fileLockManager: FileLockManager = new FileLockManager();
 
   /**
-   * Create a new Database instance
+   * Create a new NoSqlFile instance
    * 
    * @param {string} dataPath - Directory path where all data will be stored
    * @param {DatabaseOptions} [options] - Configuration options

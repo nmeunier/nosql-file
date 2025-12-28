@@ -1,16 +1,16 @@
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
-import { Database } from '../src/core/Database';
+import { NoSqlFile } from '../src/core/Database';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
 describe('Read Lock Integration - Collection', () => {
   const testDataPath = path.join(__dirname, '../data/read-lock');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
@@ -46,12 +46,12 @@ describe('Read Lock Integration - Collection', () => {
 
 describe('Read Lock Integration - Dictionary (splited)', () => {
   const testDataPath = path.join(__dirname, '../data/read-lock');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {

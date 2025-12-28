@@ -1,16 +1,16 @@
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
-import { Database } from '../src/core/Database';
+import { NoSqlFile } from '../src/core/Database';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
 describe('Collection - Drop Operations', () => {
   const testDataPath = path.join(__dirname, '../data/test-drop');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
@@ -49,7 +49,7 @@ describe('Collection - Drop Operations', () => {
   });
 
   test('should drop collection with JSON format', async () => {
-    const dbJson = new Database(testDataPath, { format: 'json' });
+    const dbJson = new NoSqlFile(testDataPath, { format: 'json' });
     const users = await dbJson.collection('users');
 
     await users.insert({ id: 1, name: 'John' });
@@ -67,12 +67,12 @@ describe('Collection - Drop Operations', () => {
 
 describe('Dictionary - Drop Operations', () => {
   const testDataPath = path.join(__dirname, '../data/test-drop');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
@@ -143,21 +143,21 @@ describe('Dictionary - Drop Operations', () => {
   });
 });
 
-describe('Database - Drop Methods', () => {
+describe('NoSqlFile - Drop Methods', () => {
   const testDataPath = path.join(__dirname, '../data/test-drop');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
     await fs.rm(testDataPath, { recursive: true, force: true });
   });
 
-  test('should drop collection via Database.dropCollection()', async () => {
+  test('should drop collection via NoSqlFile.dropCollection()', async () => {
     const users = await db.collection('users');
     await users.insert({ id: 1, name: 'John' });
 
@@ -177,7 +177,7 @@ describe('Database - Drop Methods', () => {
     expect(newUsers.count()).toBe(0);
   });
 
-  test('should drop dictionary via Database.dropDictionary()', async () => {
+  test('should drop dictionary via NoSqlFile.dropDictionary()', async () => {
     const config = await db.dictionary('config');
     await config.set('theme', 'dark');
 
@@ -197,7 +197,7 @@ describe('Database - Drop Methods', () => {
     expect(newConfig.keys()).toHaveLength(0);
   });
 
-  test('should drop splited dictionary via Database.dropDictionary()', async () => {
+  test('should drop splited dictionary via NoSqlFile.dropDictionary()', async () => {
     const cache = await db.dictionary('cache', { splited: true });
     await cache.set('user1', { id: 1, name: 'John' });
 
@@ -246,12 +246,12 @@ describe('Database - Drop Methods', () => {
 
 describe('Drop with Memory Mode', () => {
   const testDataPath = path.join(__dirname, '../data/test-drop');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
@@ -299,12 +299,12 @@ describe('Drop with Memory Mode', () => {
 
 describe('Drop - Edge Cases and Error Handling', () => {
   const testDataPath = path.join(__dirname, '../data/test-drop-edge');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {

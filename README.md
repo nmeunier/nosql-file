@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
 [![Tests](https://github.com/nmeunier/nosql-file/workflows/Tests%20%26%20Build/badge.svg)](https://github.com/nmeunier/nosql-file/actions)
-[![codecov](https://codecov.io/gh/nmeunier/nosql-file/branch/main/graph/badge.svg?token=YOUR_CODECOV_TOKEN)](https://codecov.io/gh/nmeunier/nosql-file)
+[![codecov](https://codecov.io/gh/nmeunier/nosql-file/branch/main/graph/badge.svg)](https://codecov.io/gh/nmeunier/nosql-file)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
 
 A flexible, file-based data storage library for Node.js with support for YAML and JSON formats, featuring concurrent access control, multiple write modes, and both array and key-value storage options.
@@ -19,7 +19,7 @@ A flexible, file-based data storage library for Node.js with support for YAML an
 - **Event Emitters**: Observable writes and errors for reactive applications
 - **Type-Safe**: Full TypeScript support with generics
 - **No Dependencies**: Core functionality with minimal external dependencies
-- **Comprehensive Testing**: 172 tests with 95%+ code coverage
+- **Comprehensive Testing**: 181 tests with 95%+ code coverage
 
 ## Installation
 
@@ -32,10 +32,10 @@ npm install nosql-file
 ### Basic Usage with Collections
 
 ```typescript
-import { Database } from 'nosql-file';
+import { NoSqlFile } from 'nosql-file';
 
 // Create a database instance
-const db = new Database('./data');
+const db = new NoSqlFile('./data');
 
 // Get a collection (array-based storage)
 const users = await db.collection('users');
@@ -65,9 +65,9 @@ await users.clear();
 ### Basic Usage with Dictionaries
 
 ```typescript
-import { Database } from 'nosql-file';
+import { NoSqlFile } from 'nosql-file';
 
-const db = new Database('./data');
+const db = new NoSqlFile('./data');
 
 // Get a dictionary (key-value storage)
 const config = await db.dictionary('config');
@@ -101,14 +101,14 @@ await config.clear();
 
 ## API Documentation
 
-### Database
+### NoSqlFile
 
 Main class for managing collections and dictionaries.
 
 #### Constructor
 
 ```typescript
-const db = new Database(dataPath, options);
+const db = new NoSqlFile(dataPath, options);
 ```
 
 - `dataPath`: Directory where data files will be stored
@@ -404,6 +404,12 @@ MIT
 Contributions are welcome. Please ensure tests pass and coverage remains above 95%.
 
 ## Changelog
+
+### Version 1.0.1
+
+- **Breaking Change**: Renamed main class from `Database` to `NoSqlFile` to avoid naming conflicts
+- All functionality remains identical, only the class name changed
+- Update your imports: `import { NoSqlFile } from 'nosql-file'` instead of `Database`
 
 ### Version 1.0.0
 

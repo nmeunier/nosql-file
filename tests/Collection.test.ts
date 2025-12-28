@@ -1,11 +1,11 @@
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
-import { Database } from '../src/core/Database';
+import { NoSqlFile } from '../src/core/Database';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
 describe('Collection - Basic Operations', () => {
   const testDataPath = path.join(__dirname, '../data/test');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     // Clean test directory
@@ -13,7 +13,7 @@ describe('Collection - Basic Operations', () => {
     await fs.mkdir(testDataPath, { recursive: true });
 
     // Create database instance
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
@@ -106,7 +106,7 @@ describe('Collection - Basic Operations', () => {
 
 describe('Collection - JSON Format', () => {
   const testDataPath = path.join(__dirname, '../data/test');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     // Clean test directory
@@ -114,7 +114,7 @@ describe('Collection - JSON Format', () => {
     await fs.mkdir(testDataPath, { recursive: true });
 
     // Create database instance with JSON format
-    db = new Database(testDataPath, { format: 'json' });
+    db = new NoSqlFile(testDataPath, { format: 'json' });
   });
 
   afterEach(async () => {
@@ -235,7 +235,7 @@ describe('Collection - Initial Load', () => {
     await fs.writeFile(filePath, initialData, 'utf-8');
 
     // Create database and load collection
-    const db = new Database(testDataPath);
+    const db = new NoSqlFile(testDataPath);
     const users = await db.collection('users');
 
     // Verify data was loaded
@@ -255,7 +255,7 @@ describe('Collection - Initial Load', () => {
     await fs.writeFile(filePath, initialData, 'utf-8');
 
     // Create database with JSON format and load collection
-    const db = new Database(testDataPath, { format: 'json' });
+    const db = new NoSqlFile(testDataPath, { format: 'json' });
     const users = await db.collection('users');
 
     // Verify data was loaded
@@ -266,7 +266,7 @@ describe('Collection - Initial Load', () => {
   });
 
   test('should initialize empty collection if file does not exist', async () => {
-    const db = new Database(testDataPath);
+    const db = new NoSqlFile(testDataPath);
     const users = await db.collection('users');
 
     const allUsers = users.getAll();
@@ -282,7 +282,7 @@ describe('Collection - Initial Load', () => {
     await fs.writeFile(filePath, initialData, 'utf-8');
 
     // Create database and load collection
-    const db = new Database(testDataPath);
+    const db = new NoSqlFile(testDataPath);
     const users = await db.collection('users');
 
     // Add new document
@@ -298,14 +298,14 @@ describe('Collection - Initial Load', () => {
 
 describe('Collection - EventEmitter', () => {
   const testDataPath = path.join(__dirname, '../data/test');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     // Clean test directory
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
 
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
@@ -343,7 +343,7 @@ describe('Collection - EventEmitter', () => {
 
   test('should emit "error" event on write failure', async () => {
     // Create an invalid path to force an error
-    const invalidDb = new Database('/invalid/nonexistent/path');
+    const invalidDb = new NoSqlFile('/invalid/nonexistent/path');
     const invalidCollection = await invalidDb.collection('users');
 
     const errorPromise = new Promise<Error>((resolve) => {
@@ -401,14 +401,14 @@ describe('Collection - EventEmitter', () => {
 
 describe('Collection - Find Operations', () => {
   const testDataPath = path.join(__dirname, '../data/test');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     // Clean test directory
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
 
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
@@ -525,14 +525,14 @@ describe('Collection - Find Operations', () => {
 
 describe('Collection - Update Operations', () => {
   const testDataPath = path.join(__dirname, '../data/test');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     // Clean test directory
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
 
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
@@ -620,14 +620,14 @@ describe('Collection - Update Operations', () => {
 
 describe('Collection - Delete Operations', () => {
   const testDataPath = path.join(__dirname, '../data/test');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     // Clean test directory
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
 
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
@@ -720,14 +720,14 @@ describe('Collection - Delete Operations', () => {
 
 describe('Collection - Fast Mode', () => {
   const testDataPath = path.join(__dirname, '../data/test');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     // Clean test directory
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
 
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
@@ -847,14 +847,14 @@ describe('Collection - Fast Mode', () => {
 
 describe('Collection - Utility Methods', () => {
   const testDataPath = path.join(__dirname, '../data/test');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     // Clean test directory
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
 
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
@@ -951,7 +951,7 @@ describe('Collection - Utility Methods', () => {
 `;
     await fs.writeFile(filePath, initialData, 'utf-8');
 
-    const db2 = new Database(testDataPath);
+    const db2 = new NoSqlFile(testDataPath);
     const users = await db2.collection('users');
 
     expect(users.count()).toBe(3);
@@ -960,14 +960,14 @@ describe('Collection - Utility Methods', () => {
 
 describe('Collection - Memory-Only Mode', () => {
   const testDataPath = path.join(__dirname, '../data/test');
-  let db: Database;
+  let db: NoSqlFile;
 
   beforeEach(async () => {
     // Clean test directory
     await fs.rm(testDataPath, { recursive: true, force: true });
     await fs.mkdir(testDataPath, { recursive: true });
 
-    db = new Database(testDataPath);
+    db = new NoSqlFile(testDataPath);
   });
 
   afterEach(async () => {
