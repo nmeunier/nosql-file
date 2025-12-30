@@ -738,6 +738,13 @@ describe('Collection - Fast Mode', () => {
   test('should insert in fast mode without waiting', async () => {
     const users = await db.collection('users');
 
+    // Create a promise to wait for the write to complete
+    const writtenPromise = new Promise<void>((resolve) => {
+      users.once('written', () => {
+        resolve();
+      });
+    });
+
     // Fast mode should return immediately
     const startTime = Date.now();
     await users.insert({ id: 1, name: 'John' }, { mode: 'fast' });
@@ -749,6 +756,9 @@ describe('Collection - Fast Mode', () => {
     // Data should be in memory immediately
     const results = users.find({ id: 1 });
     expect(results).toHaveLength(1);
+
+    // Wait for background write to complete before test ends
+    await writtenPromise;
   });
 
   test('should emit "written" event after fast insert completes', async () => {

@@ -1,6 +1,8 @@
 import * as fs from 'fs/promises';
 import { EventEmitter } from 'events';
 import { FileLockManager } from '../utils/FileLockManager';
+import { MetadataManager } from '../utils/MetadataManager';
+import { Metadata } from '../types';
 
 /**
  * Abstract base class for Collection and Dictionary
@@ -22,6 +24,9 @@ export abstract class DataStore extends EventEmitter {
   /** File lock manager for concurrent access control */
   protected fileLockManager: FileLockManager;
 
+  /** Metadata manager for storing metadata separately */
+  protected metadataManager: MetadataManager;
+
   /**
    * Create a new DataStore instance
    * 
@@ -34,6 +39,7 @@ export abstract class DataStore extends EventEmitter {
     this.filePath = filePath;
     this.format = format;
     this.fileLockManager = fileLockManager || new FileLockManager();
+    this.metadataManager = new MetadataManager(filePath, format);
   }
 
   /**
@@ -67,6 +73,8 @@ export abstract class DataStore extends EventEmitter {
 
     try {
       await this.serialize();
+      // Update metadata timestamp after successful write
+      await this.metadataManager.touch();
       this.emit('written');
     } catch (error) {
       this.emit('error', error);
@@ -109,6 +117,9 @@ export abstract class DataStore extends EventEmitter {
         // File/directory doesn't exist, that's fine
       }
 
+      // Delete metadata file
+      await this.metadataManager.deleteMeta();
+
       // Clear in-memory data
       this.clearData();
     } finally {
@@ -132,5 +143,39 @@ export abstract class DataStore extends EventEmitter {
    */
   getFileLockManager(): FileLockManager {
     return this.fileLockManager;
+  }
+
+  /**
+   * Get metadata for this data store
+   * 
+   * @returns {Promise<Metadata>} Metadata object
+   */
+  async getMeta(): Promise<Metadata> {
+    return this.metadataManager.getMeta();
+  }
+
+  /**
+   * Get all metadata fields
+   * 
+   * @returns {Promise<Metadata>} Complete metadata object
+   */
+  async getAllMeta(): Promise<Metadata> {
+    return this.metadataManager.getAllMeta();
+  }
+
+  /**
+   * Set or update metadata fields
+   * 
+   * @param {Partial<Metadata>} metadata - Metadata fields to set/update
+   * @returns {Promise<void>}
+   * 
+   * @example
+   * ```typescript
+   * await collection.setMeta({ version: 1, tags: ['users'] });
+   * await collection.setMeta({ custom: { author: 'John' } });
+   * ```
+   */
+  async setMeta(metadata: Partial<Metadata>): Promise<void> {
+    return this.metadataManager.setMeta(metadata);
   }
 }

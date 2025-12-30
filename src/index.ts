@@ -6,4 +6,4 @@ export { Collection } from './core/Collection';
 export { Dictionary } from './core/Dictionary';
 
 // Public types
-export { WriteOptions, DatabaseOptions, DictionaryOptions } from './types';
+export { WriteOptions, DatabaseOptions, DictionaryOptions, Metadata } from './types';

@@ -282,6 +282,8 @@ export class Dictionary extends DataStore {
       } else {
         await this.serialize();
       }
+      // Update metadata timestamp after successful write
+      await this.metadataManager.touch();
       this.emit('written');
     } catch (error) {
       this.emit('error', error);

@@ -28,7 +28,7 @@ export class NoSqlFile {
   private format: 'yaml' | 'json';
 
   /** Cache of loaded collections */
-  private collections: Map<string, Collection> = new Map();
+  private collections: Map<string, Collection<unknown>> = new Map();
 
   /** Cache of loaded dictionaries */
   private dictionaries: Map<string, Dictionary> = new Map();
@@ -54,15 +54,15 @@ export class NoSqlFile {
    * Lazy-loads the collection from disk on first access
    * 
    * @param {string} name - Collection name
-   * @returns {Promise<Collection>} The collection instance
+   * @returns {Promise<Collection<T>>} The collection instance
    */
-  async collection(name: string): Promise<Collection> {
+  async collection<T = Record<string, unknown>>(name: string): Promise<Collection<T>> {
     if (!this.collections.has(name)) {
-      const collection = new Collection(name, this.dataPath, this.format, this.fileLockManager);
+      const collection = new Collection<T>(name, this.dataPath, this.format, this.fileLockManager);
       await collection.load();
       this.collections.set(name, collection);
     }
-    return this.collections.get(name)!;
+    return this.collections.get(name)! as Collection<T>;
   }
 
   /**

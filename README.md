@@ -16,10 +16,11 @@ A flexible, file-based data storage library for Node.js with support for YAML an
 - **Write Modes**: Async, fast (background), and memory-only modes
 - **File Locking**: Built-in concurrent access control with FileLockManager
 - **Splited Mode**: Store dictionary values in separate files for better performance with large datasets
+- **Metadata Support**: Store metadata (version, tags, timestamps, custom fields) in separate files without polluting data
 - **Event Emitters**: Observable writes and errors for reactive applications
 - **Type-Safe**: Full TypeScript support with generics
 - **No Dependencies**: Core functionality with minimal external dependencies
-- **Comprehensive Testing**: 181 tests with 95%+ code coverage
+- **Comprehensive Testing**: 218 tests with 97%+ code coverage
 
 ## Installation
 
@@ -209,6 +210,35 @@ await collection.insert(doc, { mode: 'memory' });
 ```
 
 ## Advanced Usage
+
+### Metadata Support
+
+Store metadata separately from your data files for version tracking, timestamps, and custom information:
+
+```typescript
+const users = await db.collection('users');
+
+// Set metadata
+await users.setMeta({
+  version: 1,
+  tags: ['users', 'authentication'],
+  custom: {
+    author: 'John Doe',
+    description: 'User database'
+  }
+});
+
+// Get metadata (includes auto-updated timestamps)
+const meta = await users.getMeta();
+console.log(meta.createdAt);  // ISO 8601 timestamp
+console.log(meta.updatedAt);  // Updated on each sync
+console.log(meta.version);    // 1
+console.log(meta.tags);       // ['users', 'authentication']
+
+// Metadata is stored in users.meta.yaml (separate from users.yaml)
+```
+
+See [METADATA.md](docs/METADATA.md) for complete metadata documentation.
 
 ### Typed Collections
 
