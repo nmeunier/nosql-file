@@ -802,6 +802,13 @@ describe('Collection - Fast Mode', () => {
     await users.insert({ id: 1, name: 'John' });
     await users.insert({ id: 2, name: 'Jane' });
 
+    // Listen for written event to ensure fast mode completes
+    const writtenPromise = new Promise<void>((resolve) => {
+      users.on('written', () => {
+        resolve();
+      });
+    });
+
     const startTime = Date.now();
     await users.delete({ id: 1 }, { mode: 'fast' });
     const duration = Date.now() - startTime;
@@ -810,6 +817,9 @@ describe('Collection - Fast Mode', () => {
 
     const results = users.find();
     expect(results).toHaveLength(1);
+
+    // Wait for the background write to complete
+    await writtenPromise;
   });
 
   test('should persist fast mode operations to disk eventually', async () => {
