@@ -481,10 +481,21 @@ describe('Dictionary - Fast Mode', () => {
     const config = await db.dictionary('config');
 
     await config.set('theme', 'dark');
+
+    // Listen for written event to ensure fast mode completes
+    const writtenPromise = new Promise<void>((resolve) => {
+      config.on('written', () => {
+        resolve();
+      });
+    });
+
     await config.delete('theme', { mode: 'fast' });
 
     // Value should be removed from memory immediately
     expect(config.get('theme')).toBeUndefined();
+
+    // Wait for the background write to complete
+    await writtenPromise;
   });
 
   test('should persist fast mode operations to disk eventually', async () => {
