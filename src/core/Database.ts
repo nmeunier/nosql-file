@@ -27,6 +27,9 @@ export class NoSqlFile {
   /** Default data format for new collections/dictionaries */
   private format: 'yaml' | 'json';
 
+  /** Disable metadata for all collections/dictionaries */
+  private disableMetadata: boolean;
+
   /** Cache of loaded collections */
   private collections: Map<string, Collection<unknown>> = new Map();
 
@@ -42,10 +45,12 @@ export class NoSqlFile {
    * @param {string} dataPath - Directory path where all data will be stored
    * @param {DatabaseOptions} [options] - Configuration options
    * @param {string} [options.format='yaml'] - Default data format
+   * @param {boolean} [options.disableMetadata=false] - Disable metadata for all collections/dictionaries
    */
   constructor(dataPath: string, options?: DatabaseOptions) {
     this.dataPath = dataPath;
     this.format = options?.format || 'yaml';
+    this.disableMetadata = options?.disableMetadata || false;
   }
 
   /**
@@ -58,7 +63,7 @@ export class NoSqlFile {
    */
   async collection<T = Record<string, unknown>>(name: string): Promise<Collection<T>> {
     if (!this.collections.has(name)) {
-      const collection = new Collection<T>(name, this.dataPath, this.format, this.fileLockManager);
+      const collection = new Collection<T>(name, this.dataPath, this.format, this.fileLockManager, this.disableMetadata);
       await collection.load();
       this.collections.set(name, collection);
     }
@@ -73,12 +78,14 @@ export class NoSqlFile {
    * @param {string} name - Dictionary name
    * @param {DictionaryOptions} [options] - Configuration options
    * @param {boolean} [options.splited=false] - Use splited mode (per-key files)
+   * @param {boolean} [options.disableMetadata] - Override global disableMetadata setting
    * @returns {Promise<Dictionary>} The dictionary instance
    */
   async dictionary(name: string, options?: DictionaryOptions): Promise<Dictionary> {
     const key = `${name}-${options?.splited || false}`;
     if (!this.dictionaries.has(key)) {
-      const dictionary = new Dictionary(name, this.dataPath, this.format, options?.splited, this.fileLockManager);
+      const disableMetadata = options?.disableMetadata !== undefined ? options.disableMetadata : this.disableMetadata;
+      const dictionary = new Dictionary(name, this.dataPath, this.format, options?.splited, this.fileLockManager, disableMetadata);
       await dictionary.load();
       this.dictionaries.set(key, dictionary);
     }

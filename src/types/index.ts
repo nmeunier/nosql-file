@@ -4,10 +4,12 @@ export interface WriteOptions {
 
 export interface DatabaseOptions {
   format?: 'yaml' | 'json';
+  disableMetadata?: boolean;
 }
 
 export interface DictionaryOptions {
   splited?: boolean;
+  disableMetadata?: boolean;
 }
 
 /**

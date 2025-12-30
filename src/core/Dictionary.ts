@@ -45,6 +45,7 @@ export class Dictionary extends DataStore {
    * @param {'yaml' | 'json'} format - Data format, defaults to 'yaml'
    * @param {boolean} splited - Use splited mode (per-key files), defaults to false
    * @param {FileLockManager} [fileLockManager] - Optional custom lock manager
+   * @param {boolean} [disableMetadata] - Disable metadata management
    */
   constructor(
     name: string,
@@ -52,6 +53,7 @@ export class Dictionary extends DataStore {
     format: 'yaml' | 'json' = 'yaml',
     splited: boolean = false,
     fileLockManager?: FileLockManager,
+    disableMetadata = false,
   ) {
     let filePath: string;
     if (splited) {
@@ -62,7 +64,7 @@ export class Dictionary extends DataStore {
       const extension = format === 'json' ? 'json' : 'yaml';
       filePath = path.join(dataPath, `${name}.${extension}`);
     }
-    super(filePath, format, fileLockManager);
+    super(filePath, format, fileLockManager, disableMetadata);
     this.splited = splited;
   }
 
@@ -282,8 +284,10 @@ export class Dictionary extends DataStore {
       } else {
         await this.serialize();
       }
-      // Update metadata timestamp after successful write
-      await this.metadataManager.touch();
+      // Update metadata timestamp after successful write (if enabled)
+      if (!this.metadataDisabled) {
+        await this.metadataManager.touch();
+      }
       this.emit('written');
     } catch (error) {
       this.emit('error', error);

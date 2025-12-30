@@ -32,11 +32,12 @@ export class Collection<T = Record<string, unknown>> extends DataStore {
    * @param {string} dataPath - Directory path where data will be stored
    * @param {'yaml' | 'json'} format - Data format, defaults to 'yaml'
    * @param {FileLockManager} [fileLockManager] - Optional custom lock manager
+   * @param {boolean} [disableMetadata] - Disable metadata management
    */
-  constructor(name: string, dataPath: string, format: 'yaml' | 'json' = 'yaml', fileLockManager?: FileLockManager) {
+  constructor(name: string, dataPath: string, format: 'yaml' | 'json' = 'yaml', fileLockManager?: FileLockManager, disableMetadata = false) {
     const extension = format === 'json' ? 'json' : 'yaml';
     const filePath = path.join(dataPath, `${name}.${extension}`);
-    super(filePath, format, fileLockManager);
+    super(filePath, format, fileLockManager, disableMetadata);
   }
 
   /**

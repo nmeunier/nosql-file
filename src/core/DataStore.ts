@@ -27,19 +27,24 @@ export abstract class DataStore extends EventEmitter {
   /** Metadata manager for storing metadata separately */
   protected metadataManager: MetadataManager;
 
+  /** Flag to disable metadata management */
+  protected metadataDisabled: boolean;
+
   /**
    * Create a new DataStore instance
    * 
    * @param {string} filePath - Path to the file (or directory in splited mode)
    * @param {'yaml' | 'json'} format - Data format, defaults to 'yaml'
    * @param {FileLockManager} [fileLockManager] - Optional custom lock manager
+   * @param {boolean} [disableMetadata] - Disable metadata management
    */
-  constructor(filePath: string, format: 'yaml' | 'json' = 'yaml', fileLockManager?: FileLockManager) {
+  constructor(filePath: string, format: 'yaml' | 'json' = 'yaml', fileLockManager?: FileLockManager, disableMetadata = false) {
     super();
     this.filePath = filePath;
     this.format = format;
     this.fileLockManager = fileLockManager || new FileLockManager();
     this.metadataManager = new MetadataManager(filePath, format);
+    this.metadataDisabled = disableMetadata;
   }
 
   /**
@@ -73,8 +78,10 @@ export abstract class DataStore extends EventEmitter {
 
     try {
       await this.serialize();
-      // Update metadata timestamp after successful write
-      await this.metadataManager.touch();
+      // Update metadata timestamp after successful write (if enabled)
+      if (!this.metadataDisabled) {
+        await this.metadataManager.touch();
+      }
       this.emit('written');
     } catch (error) {
       this.emit('error', error);
@@ -149,8 +156,12 @@ export abstract class DataStore extends EventEmitter {
    * Get metadata for this data store
    * 
    * @returns {Promise<Metadata>} Metadata object
+   * @throws {Error} If metadata is disabled
    */
   async getMeta(): Promise<Metadata> {
+    if (this.metadataDisabled) {
+      throw new Error('Metadata is disabled for this data store');
+    }
     return this.metadataManager.getMeta();
   }
 
@@ -158,8 +169,12 @@ export abstract class DataStore extends EventEmitter {
    * Get all metadata fields
    * 
    * @returns {Promise<Metadata>} Complete metadata object
+   * @throws {Error} If metadata is disabled
    */
   async getAllMeta(): Promise<Metadata> {
+    if (this.metadataDisabled) {
+      throw new Error('Metadata is disabled for this data store');
+    }
     return this.metadataManager.getAllMeta();
   }
 
@@ -168,6 +183,7 @@ export abstract class DataStore extends EventEmitter {
    * 
    * @param {Partial<Metadata>} metadata - Metadata fields to set/update
    * @returns {Promise<void>}
+   * @throws {Error} If metadata is disabled
    * 
    * @example
    * ```typescript
@@ -176,6 +192,9 @@ export abstract class DataStore extends EventEmitter {
    * ```
    */
   async setMeta(metadata: Partial<Metadata>): Promise<void> {
+    if (this.metadataDisabled) {
+      throw new Error('Metadata is disabled for this data store');
+    }
     return this.metadataManager.setMeta(metadata);
   }
 }

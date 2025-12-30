@@ -1,3 +1,27 @@
+# nosql-file v1.1.1
+
+## Bug Fixes
+
+### Dictionary Metadata Sync Fix
+
+Fixed a critical bug where `Dictionary` was creating metadata files even when `disableMetadata` was set to `true`.
+
+**Issue:**
+- The `Dictionary` class was overriding the `sync()` method from `DataStore` and unconditionally calling `metadataManager.touch()`
+- This caused metadata files to be created regardless of the `disableMetadata` setting
+- `Collection` class worked correctly as it didn't override the `sync()` method
+
+**Fix:**
+- Added conditional check `if (!this.metadataDisabled)` before calling `metadataManager.touch()` in `Dictionary.sync()`
+- Now respects the `disableMetadata` setting consistently across all data stores
+
+**Testing:**
+- Added 12 comprehensive tests for the `disableMetadata` feature
+- All 230 tests passing
+- Coverage maintained at 97.23%
+
+---
+
 # nosql-file v1.1.0
 
 ## New Features
@@ -12,6 +36,7 @@ Collections and Dictionaries now support metadata storage in separate files, kee
 - **Tags**: Categorize your data stores
 - **Custom fields**: Add any custom metadata you need
 - **Separate files**: Metadata stored in `.meta.yaml` or `.meta.json` files
+- **Optional**: Can be disabled globally or per collection/dictionary
 
 **Example:**
 
@@ -47,6 +72,42 @@ data/
 - See [METADATA.md](METADATA.md) for complete documentation
 - See [examples/07-metadata.ts](examples/07-metadata.ts) for basic usage
 - See [examples/08-schema-migration.ts](examples/08-schema-migration.ts) for version tracking
+
+### Disable Metadata Option
+
+You can now disable metadata file creation globally or per collection/dictionary.
+
+**Key Features:**
+- **Global disable**: Disable metadata for all collections and dictionaries
+- **Per-instance override**: Override the global setting for specific collections/dictionaries
+- **Error handling**: Accessing metadata methods when disabled throws a clear error
+- **Use cases**: Perfect for temporary data (logs, caches) or performance-critical applications
+
+**Example:**
+
+```typescript
+// Disable metadata globally
+const db = new NoSqlFile('./data', { disableMetadata: true });
+
+// Collections and dictionaries won't create .meta files
+const logs = await db.collection('logs');
+await logs.insert({ message: 'Hello' });
+// logs.meta.yaml is NOT created
+
+// Override for a specific dictionary
+const config = await db.dictionary('config', { disableMetadata: false });
+// config.meta.yaml IS created (metadata enabled)
+
+// Direct instantiation with metadata disabled
+import { Collection, Dictionary } from 'nosql-file';
+const cache = new Dictionary('cache', './data', 'yaml', false, undefined, true);
+```
+
+**API Changes:**
+- `DatabaseOptions` now accepts `disableMetadata?: boolean`
+- `DictionaryOptions` now accepts `disableMetadata?: boolean`
+- `Collection` and `Dictionary` constructors now accept `disableMetadata` parameter
+- Accessing `getMeta()`, `setMeta()`, or `getAllMeta()` when disabled throws an error
 
 ### Generic Collection Type Support
 

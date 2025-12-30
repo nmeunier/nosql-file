@@ -20,7 +20,7 @@ A flexible, file-based data storage library for Node.js with support for YAML an
 - **Event Emitters**: Observable writes and errors for reactive applications
 - **Type-Safe**: Full TypeScript support with generics
 - **No Dependencies**: Core functionality with minimal external dependencies
-- **Comprehensive Testing**: 218 tests with 97%+ code coverage
+- **Comprehensive Testing**: 230 tests with 97%+ code coverage
 
 ## Installation
 
@@ -114,12 +114,14 @@ const db = new NoSqlFile(dataPath, options);
 
 - `dataPath`: Directory where data files will be stored
 - `options.format`: 'yaml' or 'json' (default: 'yaml')
+- `options.disableMetadata`: boolean - Disable metadata file creation (default: false)
 
 #### Methods
 
 - `collection(name)`: Promise<Collection> - Get or create a collection
 - `dictionary(name, options)`: Promise<Dictionary> - Get or create a dictionary
   - `options.splited`: boolean - Use splited mode (default: false)
+  - `options.disableMetadata`: boolean - Override global metadata setting
 - `syncAll()`: Promise<void> - Sync all collections and dictionaries to disk
 - `discardAll()`: Promise<void> - Reload all data from disk, discarding changes
 - `dropCollection(name)`: Promise<void> - Delete a collection and its data
@@ -133,13 +135,14 @@ Generic array-based document storage.
 #### Constructor
 
 ```typescript
-const collection = new Collection<T>(name, dataPath, format, fileLockManager);
+const collection = new Collection<T>(name, dataPath, format, fileLockManager, disableMetadata);
 ```
 
 - `name`: Collection name (used as filename)
 - `dataPath`: Directory path
 - `format`: 'yaml' or 'json' (default: 'yaml')
 - `fileLockManager`: Optional custom lock manager
+- `disableMetadata`: Disable metadata files (default: false)
 
 #### Methods
 
@@ -166,7 +169,7 @@ Key-value storage with two modes.
 #### Constructor
 
 ```typescript
-const dict = new Dictionary(name, dataPath, format, splited, fileLockManager);
+const dict = new Dictionary(name, dataPath, format, splited, fileLockManager, disableMetadata);
 ```
 
 - `name`: Dictionary name
@@ -174,6 +177,7 @@ const dict = new Dictionary(name, dataPath, format, splited, fileLockManager);
 - `format`: 'yaml' or 'json' (default: 'yaml')
 - `splited`: Use splited mode - one file per key (default: false)
 - `fileLockManager`: Optional custom lock manager
+- `disableMetadata`: Disable metadata files (default: false)
 
 #### Methods
 
@@ -239,6 +243,43 @@ console.log(meta.tags);       // ['users', 'authentication']
 ```
 
 See [METADATA.md](docs/METADATA.md) for complete metadata documentation.
+
+### Disabling Metadata
+
+If you don't need metadata files, you can disable them globally or per collection/dictionary:
+
+```typescript
+// Disable metadata globally for all collections and dictionaries
+const db = new NoSqlFile('./data', { disableMetadata: true });
+
+// Collections and dictionaries won't create .meta files
+const users = await db.collection('users');
+await users.insert({ name: 'Alice' });
+// users.meta.yaml is NOT created
+
+// Override for a specific dictionary
+const config = await db.dictionary('config', { disableMetadata: false });
+// config.meta.yaml IS created (metadata enabled)
+
+// Direct instantiation with metadata disabled
+import { Collection, Dictionary } from 'nosql-file';
+
+const logs = new Collection('logs', './data', 'yaml', undefined, true);
+const cache = new Dictionary('cache', './data', 'yaml', false, undefined, true);
+
+// Accessing metadata methods when disabled will throw an error
+try {
+  await logs.getMeta();
+} catch (error) {
+  console.error(error.message); // "Metadata is disabled for this data store"
+}
+```
+
+**When to disable metadata:**
+- Temporary data (logs, caches) that doesn't need tracking
+- Performance-critical applications with frequent writes
+- Reduced file system clutter
+- When metadata features are not needed
 
 ### Typed Collections
 
