@@ -71,7 +71,7 @@ const users = await db.collection<User>('users');
 
 ## Test Coverage
 
-- **193 passing tests** (up from 181)
+- **218 passing tests** (up from 181)
 - 95%+ code coverage maintained
 
 ## Breaking Changes
