@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs/promises';
+import * as fsSync from 'fs';
 import { WriteOptions } from '../types';
 import { YamlHandler } from '../utils/YamlHandler';
 import { JsonHandler } from '../utils/JsonHandler';
@@ -404,5 +405,239 @@ export class Dictionary extends DataStore {
         throw error;
       }
     }
+  }
+
+  /**
+   * SYNCHRONOUS OPERATIONS
+   * WARNING: These methods bypass file locking and should only be used in single-threaded
+   * contexts without concurrent access (e.g., configuration loading at application startup).
+   */
+
+  /**
+   * Load data from disk synchronously
+   * WARNING: Bypasses file locking. Use only in single-threaded contexts.
+   * 
+   * @returns {void}
+   */
+  loadSync(): void {
+    if (this.splited) {
+      this.loadSplitedSync();
+    } else {
+      this.loadSimpleSync();
+    }
+  }
+
+  /**
+   * Load from a single file synchronously (simple mode)
+   * 
+   * @private
+   * @returns {void}
+   */
+  private loadSimpleSync(): void {
+    const content: unknown = this.format === 'json'
+      ? JsonHandler.readSync(this.filePath)
+      : YamlHandler.readSync(this.filePath);
+
+    if (content && typeof content === 'object' && !Array.isArray(content)) {
+      this.data = content as Record<string, unknown>;
+    } else {
+      // File doesn't exist or is empty - initialize with empty object
+      this.data = {};
+    }
+  }
+
+  /**
+   * Load from directory with per-key files synchronously (splited mode)
+   * 
+   * @private
+   * @returns {void}
+   */
+  private loadSplitedSync(): void {
+    try {
+      const files = fsSync.readdirSync(this.filePath);
+
+      for (const file of files) {
+        const ext = path.extname(file);
+        const key = path.basename(file, ext);
+        const filePath = path.join(this.filePath, file);
+
+        // Only load files with matching format
+        if ((this.format === 'json' && ext === '.json') ||
+          (this.format === 'yaml' && ext === '.yaml')) {
+          const content: unknown = this.format === 'json'
+            ? JsonHandler.readSync(filePath)
+            : YamlHandler.readSync(filePath);
+
+          this.data[key] = content;
+        }
+      }
+    } catch (error) {
+      // Directory doesn't exist yet, that's fine - start with empty data
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        throw error;
+      }
+    }
+  }
+
+  /**
+   * Set a key-value pair synchronously
+   * WARNING: Bypasses file locking. Use only in single-threaded contexts.
+   * 
+   * @param {string} key - Key name
+   * @param {unknown} value - Value to store
+   * @returns {void}
+   */
+  setSync(key: string, value: unknown): void {
+    this.data[key] = value;
+
+    if (this.splited) {
+      this.dirtyKeys.add(key);
+      this.deletedKeys.delete(key);
+      this.syncSplitedSync(key);
+    } else {
+      this.serializeSync();
+    }
+  }
+
+  /**
+   * Delete a key-value pair synchronously
+   * WARNING: Bypasses file locking. Use only in single-threaded contexts.
+   * 
+   * @param {string} key - Key name
+   * @returns {void}
+   */
+  deleteSync(key: string): void {
+    delete this.data[key];
+
+    if (this.splited) {
+      this.deletedKeys.add(key);
+      this.dirtyKeys.delete(key);
+      this.syncSplitedSync(key);
+    } else {
+      this.serializeSync();
+    }
+  }
+
+  /**
+   * Clear all key-value pairs synchronously
+   * WARNING: Bypasses file locking. Use only in single-threaded contexts.
+   * 
+   * @returns {void}
+   */
+  clearSync(): void {
+    if (this.splited) {
+      // Mark all current keys for deletion
+      Object.keys(this.data).forEach(key => this.deletedKeys.add(key));
+      this.dirtyKeys.clear();
+    }
+
+    this.data = {};
+
+    if (this.splited) {
+      this.syncSplitedSync();
+    } else {
+      this.serializeSync();
+    }
+  }
+
+  /**
+   * Serialize key-value pairs to file format synchronously
+   * WARNING: Bypasses file locking. Use only in single-threaded contexts.
+   * 
+   * @private
+   * @returns {void}
+   */
+  private serializeSync(): void {
+    if (this.format === 'json') {
+      JsonHandler.writeSync(this.filePath, this.data);
+    } else {
+      YamlHandler.writeSync(this.filePath, this.data);
+    }
+  }
+
+  /**
+   * Sync splited mode data to individual key files synchronously
+   * 
+   * @private
+   * @param {string} [specificKey] - Optional specific key to sync
+   * @returns {void}
+   */
+  private syncSplitedSync(specificKey?: string): void {
+    // Ensure directory exists
+    fsSync.mkdirSync(this.filePath, { recursive: true });
+
+    if (specificKey) {
+      // Sync only the specific key
+      if (this.deletedKeys.has(specificKey)) {
+        this.deleteKeyFileSync(specificKey);
+        this.deletedKeys.delete(specificKey);
+      } else if (this.dirtyKeys.has(specificKey)) {
+        this.writeKeyFileSync(specificKey, this.data[specificKey]);
+        this.dirtyKeys.delete(specificKey);
+      }
+    } else {
+      // Sync all dirty keys
+      for (const key of this.dirtyKeys) {
+        this.writeKeyFileSync(key, this.data[key]);
+      }
+      this.dirtyKeys.clear();
+
+      // Delete all marked keys
+      for (const key of this.deletedKeys) {
+        this.deleteKeyFileSync(key);
+      }
+      this.deletedKeys.clear();
+    }
+  }
+
+  /**
+   * Write a single key's value to file synchronously (splited mode)
+   * 
+   * @private
+   * @param {string} key - Key name
+   * @param {unknown} value - Value to write
+   * @returns {void}
+   */
+  private writeKeyFileSync(key: string, value: unknown): void {
+    const extension = this.format === 'json' ? 'json' : 'yaml';
+    const keyFilePath = path.join(this.filePath, `${key}.${extension}`);
+
+    if (this.format === 'json') {
+      JsonHandler.writeSync(keyFilePath, value);
+    } else {
+      YamlHandler.writeSync(keyFilePath, value);
+    }
+  }
+
+  /**
+   * Delete a key's file synchronously (splited mode)
+   * 
+   * @private
+   * @param {string} key - Key name
+   * @returns {void}
+   */
+  private deleteKeyFileSync(key: string): void {
+    const extension = this.format === 'json' ? 'json' : 'yaml';
+    const keyFilePath = path.join(this.filePath, `${key}.${extension}`);
+
+    try {
+      fsSync.unlinkSync(keyFilePath);
+    } catch (error) {
+      // Ignore if file doesn't exist
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        throw error;
+      }
+    }
+  }
+
+  /**
+   * Discard in-memory changes and reload from disk synchronously
+   * WARNING: Bypasses file locking. Use only in single-threaded contexts.
+   * 
+   * @returns {void}
+   */
+  discardSync(): void {
+    this.clearData();
+    this.loadSync();
   }
 }

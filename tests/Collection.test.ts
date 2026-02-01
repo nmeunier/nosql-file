@@ -1,7 +1,163 @@
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
 import { NoSqlFile } from '../src/core/Database';
+import { Collection } from '../src/core/Collection';
 import * as fs from 'fs/promises';
+import * as fsSync from 'fs';
 import * as path from 'path';
+
+describe('Collection - Synchronous Operations', () => {
+  const testDataPath = path.join(__dirname, '../data/test-sync');
+
+  beforeEach(async () => {
+    // Clean test directory
+    await fs.rm(testDataPath, { recursive: true, force: true });
+    await fs.mkdir(testDataPath, { recursive: true });
+  });
+
+  afterEach(async () => {
+    // Cleanup
+    await fs.rm(testDataPath, { recursive: true, force: true });
+  });
+
+  test('should load data synchronously from YAML file', () => {
+    const filePath = path.join(testDataPath, 'users.yaml');
+    fsSync.writeFileSync(filePath, '- id: 1\n  name: John\n- id: 2\n  name: Jane\n', 'utf-8');
+
+    const users = new Collection('users', testDataPath);
+    users.loadSync();
+
+    const allUsers = users.getAll();
+    expect(allUsers).toHaveLength(2);
+    expect(allUsers[0]).toEqual({ id: 1, name: 'John' });
+    expect(allUsers[1]).toEqual({ id: 2, name: 'Jane' });
+  });
+
+  test('should load data synchronously from JSON file', () => {
+    const filePath = path.join(testDataPath, 'users.json');
+    fsSync.writeFileSync(filePath, JSON.stringify([
+      { id: 1, name: 'John' },
+      { id: 2, name: 'Jane' }
+    ], null, 2), 'utf-8');
+
+    const users = new Collection('users', testDataPath, 'json');
+    users.loadSync();
+
+    const allUsers = users.getAll();
+    expect(allUsers).toHaveLength(2);
+    expect(allUsers[0]).toEqual({ id: 1, name: 'John' });
+  });
+
+  test('should initialize with empty array if file does not exist', () => {
+    const users = new Collection('nonexistent', testDataPath);
+    users.loadSync();
+
+    const allUsers = users.getAll();
+    expect(allUsers).toHaveLength(0);
+  });
+
+  test('should insert and sync synchronously', () => {
+    const users = new Collection<{ id: number; name: string }>('users', testDataPath);
+    users.loadSync();
+
+    users.insertSync({ id: 1, name: 'John' });
+
+    const allUsers = users.getAll();
+    expect(allUsers).toHaveLength(1);
+    expect(allUsers[0]).toEqual({ id: 1, name: 'John' });
+
+    // Verify file was written
+    const filePath = path.join(testDataPath, 'users.yaml');
+    expect(fsSync.existsSync(filePath)).toBe(true);
+    const content = fsSync.readFileSync(filePath, 'utf-8');
+    expect(content).toContain('id: 1');
+    expect(content).toContain('name: John');
+  });
+
+  test('should update documents synchronously', () => {
+    const users = new Collection<{ id: number; name: string }>('users', testDataPath);
+    users.loadSync();
+    users.insertSync({ id: 1, name: 'John' });
+    users.insertSync({ id: 2, name: 'Jane' });
+
+    users.updateSync({ id: 1 }, { name: 'Johnny' });
+
+    const allUsers = users.getAll();
+    expect(allUsers.find(u => u.id === 1)?.name).toBe('Johnny');
+    expect(allUsers.find(u => u.id === 2)?.name).toBe('Jane');
+  });
+
+  test('should delete documents synchronously', () => {
+    const users = new Collection<{ id: number; name: string }>('users', testDataPath);
+    users.loadSync();
+    users.insertSync({ id: 1, name: 'John' });
+    users.insertSync({ id: 2, name: 'Jane' });
+
+    users.deleteSync({ id: 1 });
+
+    const allUsers = users.getAll();
+    expect(allUsers).toHaveLength(1);
+    expect(allUsers[0]).toEqual({ id: 2, name: 'Jane' });
+  });
+
+  test('should clear all documents synchronously', () => {
+    const users = new Collection<{ id: number; name: string }>('users', testDataPath);
+    users.loadSync();
+    users.insertSync({ id: 1, name: 'John' });
+    users.insertSync({ id: 2, name: 'Jane' });
+
+    users.clearSync();
+
+    const allUsers = users.getAll();
+    expect(allUsers).toHaveLength(0);
+
+    // Verify file was updated
+    const filePath = path.join(testDataPath, 'users.yaml');
+    const content = fsSync.readFileSync(filePath, 'utf-8');
+    expect(content.trim()).toBe('[]');
+  });
+
+  test('should work with complex objects', () => {
+    const products = new Collection<{ id: number; name: string; tags: string[]; price: number }>('products', testDataPath);
+    products.loadSync();
+
+    products.insertSync({
+      id: 1,
+      name: 'Laptop',
+      price: 999.99,
+      tags: ['electronics', 'computers']
+    });
+
+    const allProducts = products.getAll();
+    expect(allProducts[0]).toEqual({
+      id: 1,
+      name: 'Laptop',
+      price: 999.99,
+      tags: ['electronics', 'computers']
+    });
+  });
+
+  test('should handle application config use case', () => {
+    // Simulate application config file
+    const configPath = path.join(testDataPath, 'config.yaml');
+    fsSync.writeFileSync(configPath, `
+- key: JWT_SECRET
+  value: super-secret-key-123
+- key: DATABASE_URL
+  value: postgresql://localhost:5432/mydb
+- key: PORT
+  value: 3000
+`, 'utf-8');
+
+    const config = new Collection<{ key: string; value: string | number }>('config', testDataPath);
+    config.loadSync();
+
+    const jwtSecret = config.find({ key: 'JWT_SECRET' })[0]?.value;
+    expect(jwtSecret).toBe('super-secret-key-123');
+
+    const port = config.find({ key: 'PORT' })[0]?.value;
+    expect(port).toBe(3000);
+  });
+});
 
 describe('Collection - Basic Operations', () => {
   const testDataPath = path.join(__dirname, '../data/test');

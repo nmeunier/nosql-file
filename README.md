@@ -20,7 +20,8 @@ A flexible, file-based data storage library for Node.js with support for YAML an
 - **Event Emitters**: Observable writes and errors for reactive applications
 - **Type-Safe**: Full TypeScript support with generics
 - **No Dependencies**: Core functionality with minimal external dependencies
-- **Comprehensive Testing**: 230 tests with 97%+ code coverage
+- **Synchronous Operations**: Load configuration synchronously at application startup
+- **Comprehensive Testing**: 267 tests with 96%+ code coverage
 
 ## Installation
 
@@ -347,6 +348,108 @@ try {
   console.error('Failed to insert:', error);
 }
 ```
+
+### Synchronous Operations (Startup Config)
+
+**NEW FEATURE**: Synchronous methods for loading configuration at application startup.
+
+**Use case**: Perfect for applications where you need to load JWT secrets, database URLs, and other configuration **synchronously** before the application starts.
+
+**Important**: Synchronous methods **bypass file locking**. Only use them in **single-threaded contexts** like application startup where there's no concurrent access.
+
+#### Collection Synchronous Methods
+
+```typescript
+import { Collection } from 'nosql-file';
+
+const config = new Collection<ConfigItem>('config', './data');
+
+// Load data synchronously at startup
+config.loadSync();
+
+// Read configuration (already loaded)
+const jwtSecret = config.find({ key: 'JWT_SECRET' })[0]?.value;
+
+// Write synchronously (if needed during startup)
+config.insertSync({ key: 'NEW_KEY', value: 'new-value' });
+config.updateSync({ key: 'PORT' }, { value: 3001 });
+config.deleteSync({ key: 'OLD_KEY' });
+config.clearSync();
+```
+
+#### Dictionary Synchronous Methods
+
+```typescript
+import { Dictionary } from 'nosql-file';
+
+const config = new Dictionary('app-config', './data');
+
+// Load configuration synchronously
+config.loadSync();
+
+// Access values immediately
+const jwtSecret = config.get('JWT_SECRET') as string;
+const databaseUrl = config.get('DATABASE_URL') as string;
+const port = config.get('PORT') as number;
+
+// Set values synchronously
+config.setSync('API_KEY', 'abc123');
+config.deleteSync('OLD_KEY');
+config.clearSync();
+```
+
+#### Application Startup Integration Example
+
+```typescript
+// main.ts
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { Dictionary } from 'nosql-file';
+import * as path from 'path';
+
+async function bootstrap() {
+  // Load config synchronously before app starts
+  const config = new Dictionary('config', path.join(__dirname, '../config'), 'yaml');
+  config.loadSync();
+  
+  const port = config.get('PORT') as number || 3000;
+  const jwtSecret = config.get('JWT_SECRET') as string;
+  
+  // Set environment variables from config
+  process.env.JWT_SECRET = jwtSecret;
+  process.env.PORT = port.toString();
+  
+  // Start your application framework
+  // const app = await createApp();
+  // await app.listen(port);
+  console.log(`Application is running on: http://localhost:${port}`);
+}
+bootstrap();
+```
+
+#### Available Synchronous Methods
+
+**Collection:**
+- `loadSync()` - Load documents from disk
+- `insertSync(document)` - Insert a document
+- `updateSync(query, updates)` - Update documents
+- `deleteSync(query)` - Delete documents
+- `clearSync()` - Clear all documents
+- `discardSync()` - Reload from disk
+
+**Dictionary:**
+- `loadSync()` - Load key-value pairs from disk
+- `setSync(key, value)` - Set a key-value pair
+- `deleteSync(key)` - Delete a key
+- `clearSync()` - Clear all keys
+- `discardSync()` - Reload from disk
+
+**Remember**: These methods are **only safe** when:
+- Used at application startup (single-threaded context)
+- No concurrent access to the same files
+- Not mixed with async operations on the same instance
+
+See [examples/10-sync-config.ts](examples/10-sync-config.ts) for complete usage examples.
 
 ### Concurrent Access
 

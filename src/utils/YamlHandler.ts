@@ -1,4 +1,5 @@
 import * as fs from 'fs/promises';
+import * as fsSync from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
 
@@ -23,5 +24,39 @@ export class YamlHandler {
 
     const content = yaml.stringify(data);
     await fs.writeFile(filePath, content, 'utf-8');
+  }
+
+  /**
+   * Synchronously read YAML from a file
+   * 
+   * @param {string} filePath - Path to the YAML file
+   * @returns {unknown} Parsed YAML data, or null if file doesn't exist
+   */
+  static readSync(filePath: string): unknown {
+    try {
+      const content = fsSync.readFileSync(filePath, 'utf-8');
+      return yaml.parse(content) as unknown;
+    } catch (error: unknown) {
+      const err = error as NodeJS.ErrnoException;
+      if (err.code === 'ENOENT') {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Synchronously write YAML to a file
+   * 
+   * @param {string} filePath - Path to the YAML file
+   * @param {unknown} data - Data to serialize as YAML
+   */
+  static writeSync(filePath: string, data: unknown): void {
+    // Ensure parent directory exists
+    const dir = path.dirname(filePath);
+    fsSync.mkdirSync(dir, { recursive: true });
+
+    const content = yaml.stringify(data);
+    fsSync.writeFileSync(filePath, content, 'utf-8');
   }
 }

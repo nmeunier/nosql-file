@@ -103,7 +103,18 @@ Advanced querying and filtering:
 
 **Run:** `npx ts-node examples/09-query-operations.ts`
 
-### 10. Error Handling (10-error-handling.ts)
+### 10. Synchronous Config (10-sync-config.ts)
+**NEW!** Load configuration synchronously at application startup:
+- Synchronous loading at application startup
+- Perfect for JWT secrets and sensitive config
+- Dictionary and Collection examples
+- ConfigService integration pattern
+- Feature flags management
+- WARNING: Bypasses file locking - use only at startup
+
+**Run:** `npx ts-node examples/10-sync-config.ts`
+
+### 11. Error Handling (10-error-handling.ts)
 Best practices for error handling:
 - Try-catch patterns
 - Event-based error handling

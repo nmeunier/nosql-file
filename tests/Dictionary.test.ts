@@ -1,7 +1,307 @@
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
 import { NoSqlFile } from '../src/core/Database';
+import { Dictionary } from '../src/core/Dictionary';
 import * as fs from 'fs/promises';
+import * as fsSync from 'fs';
 import * as path from 'path';
+
+describe('Dictionary - Synchronous Operations (Simple Mode)', () => {
+  const testDataPath = path.join(__dirname, '../data/test-dict-sync');
+
+  beforeEach(async () => {
+    // Clean test directory
+    await fs.rm(testDataPath, { recursive: true, force: true });
+    await fs.mkdir(testDataPath, { recursive: true });
+  });
+
+  afterEach(async () => {
+    // Cleanup
+    await fs.rm(testDataPath, { recursive: true, force: true });
+  });
+
+  test('should load data synchronously from YAML file', () => {
+    const filePath = path.join(testDataPath, 'config.yaml');
+    fsSync.writeFileSync(filePath, 'theme: dark\nlanguage: en\nport: 3000\n', 'utf-8');
+
+    const config = new Dictionary('config', testDataPath);
+    config.loadSync();
+
+    expect(config.get('theme')).toBe('dark');
+    expect(config.get('language')).toBe('en');
+    expect(config.get('port')).toBe(3000);
+  });
+
+  test('should load data synchronously from JSON file', () => {
+    const filePath = path.join(testDataPath, 'config.json');
+    fsSync.writeFileSync(filePath, JSON.stringify({
+      theme: 'dark',
+      language: 'en'
+    }, null, 2), 'utf-8');
+
+    const config = new Dictionary('config', testDataPath, 'json');
+    config.loadSync();
+
+    expect(config.get('theme')).toBe('dark');
+    expect(config.get('language')).toBe('en');
+  });
+
+  test('should initialize with empty object if file does not exist', () => {
+    const config = new Dictionary('nonexistent', testDataPath);
+    config.loadSync();
+
+    expect(config.keys()).toHaveLength(0);
+  });
+
+  test('should set and sync synchronously', () => {
+    const config = new Dictionary('config', testDataPath);
+    config.loadSync();
+
+    config.setSync('theme', 'dark');
+    config.setSync('language', 'en');
+
+    expect(config.get('theme')).toBe('dark');
+    expect(config.get('language')).toBe('en');
+
+    // Verify file was written
+    const filePath = path.join(testDataPath, 'config.yaml');
+    expect(fsSync.existsSync(filePath)).toBe(true);
+    const content = fsSync.readFileSync(filePath, 'utf-8');
+    expect(content).toContain('theme: dark');
+    expect(content).toContain('language: en');
+  });
+
+  test('should delete key synchronously', () => {
+    const config = new Dictionary('config', testDataPath);
+    config.loadSync();
+    config.setSync('theme', 'dark');
+    config.setSync('language', 'en');
+
+    config.deleteSync('theme');
+
+    expect(config.get('theme')).toBeUndefined();
+    expect(config.get('language')).toBe('en');
+
+    // Verify file was updated
+    const filePath = path.join(testDataPath, 'config.yaml');
+    const content = fsSync.readFileSync(filePath, 'utf-8');
+    expect(content).not.toContain('theme');
+    expect(content).toContain('language: en');
+  });
+
+  test('should clear all keys synchronously', () => {
+    const config = new Dictionary('config', testDataPath);
+    config.loadSync();
+    config.setSync('theme', 'dark');
+    config.setSync('language', 'en');
+
+    config.clearSync();
+
+    expect(config.keys()).toHaveLength(0);
+
+    // Verify file was updated
+    const filePath = path.join(testDataPath, 'config.yaml');
+    const content = fsSync.readFileSync(filePath, 'utf-8');
+    expect(content.trim()).toBe('{}');
+  });
+
+  test('should work with JSON format synchronously', () => {
+    const config = new Dictionary('config-json', testDataPath, 'json');
+    config.loadSync();
+
+    config.setSync('api_key', 'abc123');
+    config.setSync('timeout', 5000);
+
+    expect(config.get('api_key')).toBe('abc123');
+    expect(config.get('timeout')).toBe(5000);
+
+    // Verify JSON file was written
+    const filePath = path.join(testDataPath, 'config-json.json');
+    expect(fsSync.existsSync(filePath)).toBe(true);
+    const content = JSON.parse(fsSync.readFileSync(filePath, 'utf-8'));
+    expect(content).toEqual({ api_key: 'abc123', timeout: 5000 });
+  });
+
+  test('should handle application config use case', () => {
+    // Simulate application config file
+    const configPath = path.join(testDataPath, 'app-config.yaml');
+    fsSync.writeFileSync(configPath, `
+JWT_SECRET: super-secret-key-123
+DATABASE_URL: postgresql://localhost:5432/mydb
+PORT: 3000
+REDIS_HOST: localhost
+`, 'utf-8');
+
+    const config = new Dictionary('app-config', testDataPath);
+    config.loadSync();
+
+    expect(config.get('JWT_SECRET')).toBe('super-secret-key-123');
+    expect(config.get('DATABASE_URL')).toBe('postgresql://localhost:5432/mydb');
+    expect(config.get('PORT')).toBe(3000);
+    expect(config.get('REDIS_HOST')).toBe('localhost');
+  });
+
+  test('should store complex objects', () => {
+    const config = new Dictionary('config', testDataPath);
+    config.loadSync();
+
+    config.setSync('database', {
+      host: 'localhost',
+      port: 5432,
+      credentials: { username: 'admin', password: 'secret' }
+    });
+
+    const dbConfig = config.get('database') as any;
+    expect(dbConfig.host).toBe('localhost');
+    expect(dbConfig.credentials.username).toBe('admin');
+  });
+});
+
+describe('Dictionary - Synchronous Operations (Splited Mode)', () => {
+  const testDataPath = path.join(__dirname, '../data/test-dict-sync-splited');
+
+  beforeEach(async () => {
+    // Clean test directory
+    await fs.rm(testDataPath, { recursive: true, force: true });
+    await fs.mkdir(testDataPath, { recursive: true });
+  });
+
+  afterEach(async () => {
+    // Cleanup
+    await fs.rm(testDataPath, { recursive: true, force: true });
+  });
+
+  test('should load data synchronously from directory with per-key files', () => {
+    const dirPath = path.join(testDataPath, 'cache');
+    fsSync.mkdirSync(dirPath, { recursive: true });
+    fsSync.writeFileSync(path.join(dirPath, 'user-1.yaml'), 'name: John\nage: 30\n', 'utf-8');
+    fsSync.writeFileSync(path.join(dirPath, 'user-2.yaml'), 'name: Jane\nage: 25\n', 'utf-8');
+
+    const cache = new Dictionary('cache', testDataPath, 'yaml', true);
+    cache.loadSync();
+
+    expect(cache.get('user-1')).toEqual({ name: 'John', age: 30 });
+    expect(cache.get('user-2')).toEqual({ name: 'Jane', age: 25 });
+  });
+
+  test('should set and sync individual key files synchronously', () => {
+    const cache = new Dictionary('cache', testDataPath, 'yaml', true);
+    cache.loadSync();
+
+    cache.setSync('user-1', { name: 'John', age: 30 });
+    cache.setSync('user-2', { name: 'Jane', age: 25 });
+
+    // Verify individual files were created
+    const dirPath = path.join(testDataPath, 'cache');
+    expect(fsSync.existsSync(path.join(dirPath, 'user-1.yaml'))).toBe(true);
+    expect(fsSync.existsSync(path.join(dirPath, 'user-2.yaml'))).toBe(true);
+
+    const user1Content = fsSync.readFileSync(path.join(dirPath, 'user-1.yaml'), 'utf-8');
+    expect(user1Content).toContain('name: John');
+  });
+
+  test('should delete individual key files synchronously', () => {
+    const cache = new Dictionary('cache', testDataPath, 'yaml', true);
+    cache.loadSync();
+    cache.setSync('user-1', { name: 'John' });
+    cache.setSync('user-2', { name: 'Jane' });
+
+    cache.deleteSync('user-1');
+
+    expect(cache.get('user-1')).toBeUndefined();
+    expect(cache.get('user-2')).toEqual({ name: 'Jane' });
+
+    // Verify file was deleted
+    const dirPath = path.join(testDataPath, 'cache');
+    expect(fsSync.existsSync(path.join(dirPath, 'user-1.yaml'))).toBe(false);
+    expect(fsSync.existsSync(path.join(dirPath, 'user-2.yaml'))).toBe(true);
+  });
+
+  test('should clear all keys and delete all files synchronously', () => {
+    const cache = new Dictionary('cache', testDataPath, 'yaml', true);
+    cache.loadSync();
+    cache.setSync('user-1', { name: 'John' });
+    cache.setSync('user-2', { name: 'Jane' });
+    cache.setSync('user-3', { name: 'Bob' });
+
+    cache.clearSync();
+
+    expect(cache.keys()).toHaveLength(0);
+
+    // Verify all files were deleted
+    const dirPath = path.join(testDataPath, 'cache');
+    expect(fsSync.existsSync(path.join(dirPath, 'user-1.yaml'))).toBe(false);
+    expect(fsSync.existsSync(path.join(dirPath, 'user-2.yaml'))).toBe(false);
+    expect(fsSync.existsSync(path.join(dirPath, 'user-3.yaml'))).toBe(false);
+  });
+
+  test('should work with JSON format in splited mode', () => {
+    const cache = new Dictionary('cache', testDataPath, 'json', true);
+    cache.loadSync();
+
+    cache.setSync('config-1', { timeout: 5000 });
+    cache.setSync('config-2', { retries: 3 });
+
+    // Verify JSON files were created
+    const dirPath = path.join(testDataPath, 'cache');
+    expect(fsSync.existsSync(path.join(dirPath, 'config-1.json'))).toBe(true);
+    expect(fsSync.existsSync(path.join(dirPath, 'config-2.json'))).toBe(true);
+
+    const config1Content = fsSync.readFileSync(path.join(dirPath, 'config-1.json'), 'utf-8');
+    expect(JSON.parse(config1Content)).toEqual({ timeout: 5000 });
+  });
+
+  test('should delete JSON files in splited mode', () => {
+    const cache = new Dictionary('cache', testDataPath, 'json', true);
+    cache.loadSync();
+    cache.setSync('config-1', { timeout: 5000 });
+
+    cache.deleteSync('config-1');
+
+    const dirPath = path.join(testDataPath, 'cache');
+    expect(fsSync.existsSync(path.join(dirPath, 'config-1.json'))).toBe(false);
+  });
+
+  test('should handle deleteSync on non-existent key file (no error)', () => {
+    const cache = new Dictionary('cache', testDataPath, 'yaml', true);
+    cache.loadSync();
+
+    // This should not throw even if file doesn't exist
+    expect(() => cache.deleteSync('non-existent-key')).not.toThrow();
+  });
+
+  test('should discard changes and reload synchronously in splited mode', () => {
+    const cache = new Dictionary('cache', testDataPath, 'yaml', true);
+    cache.loadSync();
+
+    // Set initial data
+    cache.setSync('user-1', { name: 'John', age: 30 });
+
+    // Modify in memory without sync
+    const dirtyCache = new Dictionary('cache', testDataPath, 'yaml', true);
+    dirtyCache.loadSync();
+    dirtyCache.setSync('user-2', { name: 'Jane', age: 25 });
+
+    // Load fresh instance and verify
+    const freshCache = new Dictionary('cache', testDataPath, 'yaml', true);
+    freshCache.loadSync();
+
+    expect(freshCache.get('user-1')).toEqual({ name: 'John', age: 30 });
+    expect(freshCache.get('user-2')).toEqual({ name: 'Jane', age: 25 });
+  });
+
+  test('should load existing splited JSON files', () => {
+    const dirPath = path.join(testDataPath, 'cache');
+    fsSync.mkdirSync(dirPath, { recursive: true });
+    fsSync.writeFileSync(path.join(dirPath, 'key-1.json'), JSON.stringify({ value: 'test' }), 'utf-8');
+    fsSync.writeFileSync(path.join(dirPath, 'key-2.json'), JSON.stringify({ value: 'test2' }), 'utf-8');
+
+    const cache = new Dictionary('cache', testDataPath, 'json', true);
+    cache.loadSync();
+
+    expect(cache.get('key-1')).toEqual({ value: 'test' });
+    expect(cache.get('key-2')).toEqual({ value: 'test2' });
+  });
+});
 
 describe('Dictionary - Basic Operations (Simple Mode)', () => {
   const testDataPath = path.join(__dirname, '../data/test');

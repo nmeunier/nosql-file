@@ -241,5 +241,119 @@ export class Collection<T = Record<string, unknown>> extends DataStore {
     this.clearData();
     await this.load();
   }
+
+  /**
+   * SYNCHRONOUS OPERATIONS
+   * WARNING: These methods bypass file locking and should only be used in single-threaded
+   * contexts without concurrent access (e.g., configuration loading at application startup).
+   */
+
+  /**
+   * Load documents from disk synchronously
+   * WARNING: Bypasses file locking. Use only in single-threaded contexts.
+   * 
+   * @returns {void}
+   */
+  loadSync(): void {
+    const content: unknown = this.format === 'json'
+      ? JsonHandler.readSync(this.filePath)
+      : YamlHandler.readSync(this.filePath);
+
+    if (Array.isArray(content)) {
+      this.data = content as T[];
+    } else {
+      // File doesn't exist or is empty - initialize with empty array
+      this.data = [];
+    }
+  }
+
+  /**
+   * Insert a single document synchronously
+   * WARNING: Bypasses file locking. Use only in single-threaded contexts.
+   * 
+   * @param {T} document - Document to insert
+   * @returns {void}
+   */
+  insertSync(document: T): void {
+    this.data.push(document);
+    this.serializeSync();
+  }
+
+  /**
+   * Update documents matching a query synchronously
+   * WARNING: Bypasses file locking. Use only in single-threaded contexts.
+   * 
+   * @param {Partial<T>} query - Query to match documents
+   * @param {Partial<T>} updates - Properties to update
+   * @returns {void}
+   */
+  updateSync(query: Partial<T>, updates: Partial<T>): void {
+    this.data = this.data.map((doc) => {
+      const matches = Object.entries(query).every(([key, value]) => {
+        return doc[key as keyof T] === value;
+      });
+
+      if (matches) {
+        return { ...doc, ...updates };
+      }
+      return doc;
+    });
+
+    this.serializeSync();
+  }
+
+  /**
+   * Delete documents matching a query synchronously
+   * WARNING: Bypasses file locking. Use only in single-threaded contexts.
+   * 
+   * @param {Partial<T>} query - Query to match documents
+   * @returns {void}
+   */
+  deleteSync(query: Partial<T>): void {
+    this.data = this.data.filter((doc) => {
+      return !Object.entries(query).every(([key, value]) => {
+        return doc[key as keyof T] === value;
+      });
+    });
+
+    this.serializeSync();
+  }
+
+  /**
+   * Clear all documents synchronously
+   * WARNING: Bypasses file locking. Use only in single-threaded contexts.
+   * 
+   * @returns {void}
+   */
+  clearSync(): void {
+    this.data = [];
+    this.serializeSync();
+  }
+
+  /**
+   * Serialize documents to file format synchronously
+   * WARNING: Bypasses file locking. Use only in single-threaded contexts.
+   * 
+   * @private
+   * @returns {void}
+   */
+  private serializeSync(): void {
+    if (this.format === 'json') {
+      JsonHandler.writeSync(this.filePath, this.data);
+    } else {
+      YamlHandler.writeSync(this.filePath, this.data);
+    }
+  }
+
+  /**
+   * Discard in-memory changes and reload from disk synchronously
+   * WARNING: Bypasses file locking. Use only in single-threaded contexts.
+   * 
+   * @returns {void}
+   */
+  discardSync(): void {
+    this.clearData();
+    this.loadSync();
+  }
 }
 
