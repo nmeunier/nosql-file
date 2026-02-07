@@ -136,14 +136,16 @@ export class MetadataManager {
    */
   async touch(): Promise<void> {
     const existingMeta = await this.getMeta();
+    const now = new Date().toISOString();
 
     // Set createdAt if it doesn't exist
     if (!existingMeta.createdAt) {
-      existingMeta.createdAt = new Date().toISOString();
+      // Create a copy to avoid YAML anchor references
+      existingMeta.createdAt = now.slice();
     }
 
-    // Always update updatedAt
-    existingMeta.updatedAt = new Date().toISOString();
+    // Always update updatedAt (use slice to create a new string instance)
+    existingMeta.updatedAt = now.slice();
 
     await this.setMeta(existingMeta);
   }

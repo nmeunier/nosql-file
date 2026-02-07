@@ -22,7 +22,10 @@ export class YamlHandler {
     const dir = path.dirname(filePath);
     await fs.mkdir(dir, { recursive: true });
 
-    const content = yaml.stringify(data);
+    // Disable YAML anchors to avoid &a1, *a1 references
+    const content = yaml.stringify(data, {
+      aliasDuplicateObjects: false
+    });
     await fs.writeFile(filePath, content, 'utf-8');
   }
 
@@ -56,7 +59,10 @@ export class YamlHandler {
     const dir = path.dirname(filePath);
     fsSync.mkdirSync(dir, { recursive: true });
 
-    const content = yaml.stringify(data);
+    // Disable YAML anchors to avoid &a1, *a1 references
+    const content = yaml.stringify(data, {
+      aliasDuplicateObjects: false
+    });
     fsSync.writeFileSync(filePath, content, 'utf-8');
   }
 }
